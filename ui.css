@@ -17,8 +17,7 @@ p { line-height: 1.5; }
 .chips span { padding: 6px 8px; border-radius: 6px; background: #242c3b; color: #e6ebf4; font-size: 12px; }
 .tip { margin: 18px 0; color: #aeb8c8; font-size: 12px; }
 button { border: 0; border-radius: 7px; padding: 9px 13px; background: #3977ff; color: white; font-weight: 700; cursor: pointer; }
-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-header h1 { margin: 0; }
+header { display: flex; align-items: center; justify-content: flex-end; gap: 16px; min-height: 28px; }
 .terminal-actions { display: flex; align-items: center; gap: 8px; }
 .terminal-actions label { color: #aeb8c8; font-size: 12px; }
 .terminal-actions select { max-width: 280px; border: 1px solid #4d8f61; border-radius: 7px; padding: 8px; background: #0b1d11; color: #d6f7df; font: 12px ui-monospace, monospace; }

@@ -171,7 +171,6 @@
         speak(`Codex agent is unavailable. ${error || 'Check Codex CLI login and native host setup.'}`);
         return;
       }
-      speak('Codex is working on it.');
     });
   }
 
