@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { spawn } from 'node:child_process';
-import { accessSync, chmodSync, constants, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { accessSync, chmodSync, constants, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 const AGENT_BIN = '/home/agent/.npm-global/bin';
 const OPEN_BLOCKER_DIR = '/tmp/websim-voice-control-bin';
@@ -65,6 +66,7 @@ process.stdin.on('data', chunk => {
 
 function run(message) {
   if (message.kind === 'codex-status') return runCodexStatus();
+  if (message.kind === 'codex-sessions') return runCodexSessions(message.filter);
   if (message.kind === 'cancel-codex') {
     if (activeChild) {
       activeCancelled = true;
@@ -112,7 +114,9 @@ function runCodex(message) {
     return Promise.resolve();
   }
   if (/(?:create|make|start) (?:a |an )?(?:(?:new|blank|fresh) )?websim project/i.test(prompt)) return runWebsimCreate();
-  const args = ['exec', '--json', '--skip-git-repo-check', '--dangerously-bypass-approvals-and-sandbox'];
+  const args = message.sessionId
+    ? ['exec', 'resume', '--json', '--skip-git-repo-check', '--dangerously-bypass-approvals-and-sandbox', String(message.sessionId)]
+    : ['exec', '--json', '--skip-git-repo-check', '--dangerously-bypass-approvals-and-sandbox'];
   if (message.model) args.push('--model', String(message.model));
   if (message.reasoning) args.push('--config', `model_reasoning_effort=${JSON.stringify(String(message.reasoning))}`);
   const outputFile = `/tmp/websim-codex-${process.pid}.txt`;
@@ -249,9 +253,50 @@ function emitProgress(line) {
       ? `${command || 'command'}\n${commandOutput}`
       : detail;
     inspectAuthText(commandDetail);
-    const speak = event.type === 'item.completed' && item.type === 'agent_message';
-    writeMessage({ kind: 'progress', text: `Codex ${event.type || 'output'}: ${commandDetail}`.slice(0, 12000), speak, speakText: speak ? detail.slice(0, 500) : undefined });
+    const sessionId = event.thread_id || event.thread?.id || event.session_id;
+    let display = `Codex ${event.type || 'output'}: ${commandDetail}`;
+    if (event.type === 'thread.started') display = `● Codex session started${sessionId ? ` · ${sessionId}` : ''}`;
+    else if (event.type === 'turn.started') display = '▶ Turn started';
+    else if (event.type === 'turn.completed') display = `✓ Turn complete${event.usage ? ` · ${event.usage.output_tokens ?? 0} output tokens` : ''}`;
+    else if (item.type === 'agent_message' && item.text) display = `Codex: ${item.text}`;
+    else if (item.type === 'command_execution') {
+      const prefix = event.type === 'item.started' ? '▶ $' : event.type === 'item.completed' ? '✓ $' : '$';
+      display = `${prefix} ${command || 'command'}${commandOutput ? `\n${commandOutput}` : ''}`;
+    }
+    writeMessage({ kind: 'progress', text: display.slice(0, 12000), speak: event.type === 'item.completed' && item.type === 'agent_message', speakText: item.type === 'agent_message' ? detail.slice(0, 500) : undefined, sessionId });
   } catch {
     writeMessage({ kind: 'progress', text: `Codex: ${line.trim()}`.slice(0, 2000), speak: false });
   }
+}
+
+function runCodexSessions(filter = '') {
+  const root = '/home/agent/.codex/sessions';
+  const sessions = [];
+  const needle = String(filter || '').trim().toLowerCase();
+  function visit(directory) {
+    let entries = [];
+    try { entries = readdirSync(directory, { withFileTypes: true }); } catch { return; }
+    for (const entry of entries) {
+      const fullPath = join(directory, entry.name);
+      if (entry.isDirectory()) visit(fullPath);
+      else if (entry.isFile() && entry.name.endsWith('.jsonl')) {
+        try {
+          const lines = readFileSync(fullPath, 'utf8').split('\n').filter(Boolean);
+          const metaLine = lines.map(line => JSON.parse(line)).find(row => row.type === 'session_meta');
+          const meta = metaLine?.payload || {};
+          const id = meta.session_id || meta.id;
+          if (!id) continue;
+          const lastUser = [...lines].reverse().map(line => { try { return JSON.parse(line); } catch { return null; } }).find(row => /user_message|user_prompt/i.test(row?.payload?.type || row?.type || ''));
+          const summary = String(lastUser?.payload?.message || lastUser?.payload?.text || lastUser?.payload?.content || '').replace(/\s+/g, ' ').slice(0, 180);
+          const item = { id, cwd: meta.cwd || '', timestamp: meta.timestamp || '', model: meta.model_provider || '', summary };
+          const haystack = `${id} ${item.cwd} ${item.summary}`.toLowerCase();
+          if (!needle || haystack.includes(needle)) sessions.push(item);
+        } catch {}
+      }
+    }
+  }
+  visit(root);
+  sessions.sort((a, b) => String(b.timestamp).localeCompare(String(a.timestamp)));
+  writeMessage({ kind: 'codex-sessions', sessions: sessions.slice(0, 50) });
+  return Promise.resolve();
 }

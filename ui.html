@@ -14,14 +14,14 @@
       <section class="command-group"><h2>Modes & safety</h2><div class="command"><b>Command Mode</b><span>Switch to voice actions</span></div><div class="command"><b>Dictation Mode</b><span>Type everything you say</span></div><div class="command"><b>Websim Sleep</b><span>Disable all commands</span></div><div class="command"><b>Websim Wake</b><span>Enable commands again</span></div></section>
       <section class="command-group"><h2>Text editing</h2><div class="chips"><span>Say hello</span><span>Write hello</span><span>Select All</span><span>Delete</span><span>Enter</span><span>Tab</span><span>Backspace</span><span>Space</span></div></section>
       <section class="command-group"><h2>Projects</h2><div class="command"><b>Recent Projects</b><span>Read and show recent projects</span></div><div class="command"><b>Search Projects for …</b><span>Find a project by phrase</span></div><div class="command"><b>Open Project …</b><span>Navigate by number, name, ID, or URL</span></div><div class="command"><b>New Project</b><span>Open Websim’s creator</span></div></section>
-      <section class="command-group"><h2>Codex agent</h2><div class="command"><b>Codex …</b><span>Run an instruction through Codex + websim-cli</span></div><div class="command"><b>Codex Stop</b><span>Cancel the active task</span></div><div class="command"><b>Show Terminal / Hide Terminal</b><span>Control the live progress window</span></div></section>
+      <section class="command-group"><h2>Codex agent</h2><div class="command"><b>Codex …</b><span>Run an instruction through Codex + websim-cli</span></div><div class="command"><b>Codex Stop</b><span>Cancel the active task</span></div><div class="command"><b>List Codex Sessions</b><span>Show resumable local sessions</span></div><div class="command"><b>Resume Codex Session 1</b><span>Continue a listed session</span></div><div class="command"><b>Find Codex Sessions for …</b><span>Filter saved sessions</span></div><div class="command"><b>Show Terminal / Hide Terminal</b><span>Control the live progress window</span></div></section>
       <section class="command-group"><h2>CLI shortcuts</h2><div class="chips"><span>CLI Login</span><span>Clone Project …</span><span>Pull Project</span><span>Sync Project</span><span>Push Project</span><span>Promote Project</span></div></section>
       <p class="tip"><b>Tip:</b> Say “Scroll Down” to move through Help, “Close Help Menu” to close it, “Alt Tab” to return to the browser window, or “Switch Tab” to cycle tabs.</p>
       <button id="close-help" type="button">Close Help</button>
     </main>
     <main id="terminal-view" hidden>
       <header><h1>Codex Agent Terminal</h1><button id="close-terminal" type="button">Close</button></header>
-      <pre id="terminal-output">Waiting for Codex…</pre>
+      <div id="terminal-output" role="log" aria-live="polite" data-placeholder="true">Waiting for Codex…</div>
       <form id="terminal-input" autocomplete="off">
         <input id="terminal-prompt" type="text" placeholder="Type a follow-up prompt…" aria-label="Codex follow-up prompt" />
         <button type="submit">Send</button>

@@ -19,6 +19,7 @@ p { line-height: 1.5; }
 button { border: 0; border-radius: 7px; padding: 9px 13px; background: #3977ff; color: white; font-weight: 700; cursor: pointer; }
 header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 header h1 { margin: 0; }
-#terminal-output { flex: 1 1 auto; min-height: 0; height: auto; margin: 18px 0 0; padding: 14px; overflow: auto; border: 1px solid #4d8f61; border-radius: 10px; background: #07130b; color: #d6f7df; white-space: pre-wrap; font: 12px/1.45 ui-monospace, monospace; }
+#terminal-output { display: flex; flex: 1 1 auto; min-height: 0; height: auto; flex-direction: column; justify-content: flex-end; gap: 4px; margin: 18px 0 0; padding: 14px; overflow: auto; border: 1px solid #4d8f61; border-radius: 10px; background: #07130b; color: #d6f7df; font: 12px/1.45 ui-monospace, monospace; }
+.terminal-line { flex: 0 0 auto; white-space: pre-wrap; overflow-wrap: anywhere; }
 #terminal-input { display: flex; gap: 8px; margin-top: 12px; }
 #terminal-prompt { flex: 1; min-width: 0; border: 1px solid #4d8f61; border-radius: 7px; padding: 9px 10px; background: #0b1d11; color: #d6f7df; font: 12px ui-monospace, monospace; }

@@ -196,6 +196,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sendResponse({ terminalState });
     return true;
   }
+  if (message.type === 'get-codex-sessions') {
+    if (typeof chrome.runtime.sendNativeMessage !== 'function') {
+      sendResponse({ ok: false, error: 'Chrome native messaging is unavailable.' });
+      return true;
+    }
+    chrome.runtime.sendNativeMessage(NATIVE_HOST, { kind: 'codex-sessions', filter: message.filter || '' }, response => {
+      const error = chrome.runtime.lastError;
+      sendResponse(error ? { ok: false, error: error.message } : (response || { ok: false, error: 'No session list returned.' }));
+    });
+    return true;
+  }
   if (message.type === 'ensure-content-ui') {
     const tabId = message.tabId;
     if (!tabId) { sendResponse({ ok: false, error: 'No active tab.' }); return true; }
@@ -251,7 +262,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return true;
     }
     chrome.storage.local.get({ codexModel: '', codexReasoning: '' }, result => {
-      const payload = { kind: 'codex', prompt: message.prompt, model: result.codexModel || undefined, reasoning: result.codexReasoning || undefined };
+      const payload = { kind: 'codex', prompt: message.prompt, sessionId: message.sessionId || undefined, model: result.codexModel || undefined, reasoning: result.codexReasoning || undefined };
       log('log', 'Running Codex agent request', { prompt: message.prompt, model: payload.model || 'configured default' });
       if (typeof chrome.runtime.connectNative !== 'function') {
         const error = 'Chrome native messaging is unavailable. Reload the extension after adding nativeMessaging permission.';

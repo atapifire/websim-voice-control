@@ -25,6 +25,7 @@
     vee: 'v', doubleyou: 'w', ex: 'x', why: 'y', zed: 'z', zee: 'z'
   };
   let projectResults = [];
+  let codexSessions = [];
 
   function updateIndicator(text = '') {
     indicator.hidden = !state.listening;
@@ -153,13 +154,13 @@
     });
   }
 
-  function runCodexAgent(prompt) {
+  function runCodexAgent(prompt, options = {}) {
     const agentPrompt = `Act as the Websim execution agent. This is a Websim voice-control extension, so all Websim project creation, listing, opening, and project operations MUST use the installed websim-cli at /home/agent/.npm-global/bin/websim-cli. Carry out the instruction instead of only explaining it. If authentication is required, run websim-cli login and continue after login. Do not use Websim browser APIs for the operation. Do not run xdg-open, open, window.open, window.location, or browser automation for the final project, and do not create a new browser window. Print the complete final project URL on a line beginning WEBsim_URL: so the extension can open exactly one new tab in the current browser window. ${prompt}`;
     log('Codex agent request', { prompt: agentPrompt });
     terminalOutput.textContent = '';
     showTerminal();
     terminalLine(`> ${prompt}`);
-    chrome.runtime.sendMessage({ type: 'run-codex-agent', prompt: agentPrompt }, response => {
+    chrome.runtime.sendMessage({ type: 'run-codex-agent', prompt: agentPrompt, sessionId: options.sessionId }, response => {
       const error = chrome.runtime.lastError?.message || response?.error;
       if (error || !response?.ok) {
         speak(`Codex agent is unavailable. ${error || 'Check Codex CLI login and native host setup.'}`);
@@ -174,6 +175,29 @@
     chrome.runtime.sendMessage({ type: 'stop-codex-agent' }, response => {
       speak(response?.ok ? 'Stopping Codex.' : 'No Codex task is running.');
     });
+  }
+
+  function listCodexSessions(filter = '') {
+    chrome.runtime.sendMessage({ type: 'get-codex-sessions', filter }, response => {
+      codexSessions = response?.sessions || [];
+      showTerminal();
+      terminalLine(codexSessions.length ? `Available Codex sessions${filter ? ` matching “${filter}”` : ''}:` : 'No resumable Codex sessions found.');
+      for (const [index, session] of codexSessions.slice(0, 10).entries()) {
+        terminalLine(`${index + 1}. ${session.summary || 'Untitled session'} · ${session.id} · ${session.cwd || 'unknown folder'}`);
+      }
+      if (!codexSessions.length) speak('No resumable Codex sessions found.');
+      else speak(`I found ${codexSessions.length} resumable Codex sessions. The newest is session 1.`);
+    });
+  }
+
+  function resumeCodexSession(target) {
+    const number = Number.parseInt(target, 10);
+    const session = Number.isInteger(number) ? codexSessions[number - 1] : codexSessions.find(item => item.id === target);
+    if (!session) {
+      speak('I do not have that session in the current list. Say List Codex Sessions first.');
+      return;
+    }
+    runCodexAgent(`Resume this Websim work session and continue from its previous state. ${session.summary || ''}`, { sessionId: session.id });
   }
 
   const helpHost = document.createElement('div');
@@ -397,6 +421,16 @@
     if (normalized === 'show terminal' || normalized === 'show codex terminal' || normalized === 'open terminal') { showTerminal(); return; }
     if (normalized === 'hide terminal' || normalized === 'hide codex terminal' || normalized === 'close terminal') { hideTerminal(); return; }
     if (normalized === 'codex stop' || normalized === 'stop codex' || normalized === 'agent stop') { stopCodexAgent(); return; }
+    if (normalized === 'list codex sessions' || normalized === 'show codex sessions' || normalized === 'what codex sessions can i resume' || normalized === 'what sessions can i resume') { listCodexSessions(); return; }
+    const findSessions = normalized.match(/^(?:find|search) codex sessions(?: for)?\s+(.+)$/);
+    if (findSessions) { listCodexSessions(findSessions[1]); return; }
+    if (normalized === 'resume last codex session' || normalized === 'resume last session') {
+      if (codexSessions[0]) resumeCodexSession('1');
+      else chrome.runtime.sendMessage({ type: 'get-codex-sessions' }, response => { codexSessions = response?.sessions || []; if (codexSessions[0]) resumeCodexSession('1'); else speak('No resumable Codex sessions found.'); });
+      return;
+    }
+    const resumeSession = normalized.match(/^resume (?:codex )?session\s+(.+)$/);
+    if (resumeSession) { resumeCodexSession(resumeSession[1]); return; }
     const askCodex = normalized.match(/^(?:ask codex|codex|agent)\s+(.+)$/);
     if (askCodex) { runCodexAgent(`Use the installed websim-cli where appropriate. ${askCodex[1]}`); return; }
     const setModel = normalized.match(/^(?:switch|change) (?:codex )?(?:model|mode) to\s+(luna|terra|sol|[a-z0-9][a-z0-9.-]*)(?:\s+(?:with|at)?\s*(low|medium|high|xhigh))?$/);

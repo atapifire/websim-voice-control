@@ -81,6 +81,10 @@ tab.
 
 - `Codex <instruction>` runs a local Codex task.
 - `Codex Stop` cancels the active task.
+- `List Codex Sessions` lists saved local Codex sessions.
+- `Find Codex Sessions for websim` filters saved sessions.
+- `Resume Codex Session 1` resumes a session from the current list.
+- `Resume Last Codex Session` resumes the newest saved session.
 - `CLI Login`
 - `Clone Project <id>`
 - `Pull Project`, `Sync Project`, `Push Project`, `Promote Project`
@@ -90,8 +94,10 @@ tab.
 - `What Model Am I Using?`
 
 The Codex Terminal shows command events and output and includes a follow-up
-prompt field. TTS speaks meaningful status, agent messages, login state,
-errors, and completion messages—not raw event JSON.
+prompt field. Its newest output stays anchored at the bottom, with older
+output above it. TTS speaks meaningful status, agent messages, login state,
+errors, and completion messages—not raw event JSON. Sessions are read from
+the local Codex session store and resumed with the installed Codex CLI.
 
 ## Optional native bridge setup
 

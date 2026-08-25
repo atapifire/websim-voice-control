@@ -10,7 +10,14 @@ document.body.classList.toggle('terminal-mode', isTerminal);
 
 function append(text) {
   if (!text) return;
-  output.textContent += `${output.textContent === 'Waiting for Codex…' ? '' : '\n'}[${new Date().toLocaleTimeString()}] ${text}`;
+  if (output.dataset.placeholder === 'true') {
+    output.textContent = '';
+    output.dataset.placeholder = 'false';
+  }
+  const line = document.createElement('div');
+  line.className = 'terminal-line';
+  line.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+  output.appendChild(line);
   output.scrollTop = output.scrollHeight;
 }
 

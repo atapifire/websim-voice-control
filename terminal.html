@@ -9,7 +9,7 @@
   <body class="terminal-mode">
     <main id="terminal-view">
       <header><h1>Codex Agent Terminal</h1><button id="close-terminal" type="button">Close</button></header>
-      <pre id="terminal-output">Waiting for Codex…</pre>
+      <div id="terminal-output" role="log" aria-live="polite" data-placeholder="true">Waiting for Codex…</div>
       <form id="terminal-input" autocomplete="off">
         <input id="terminal-prompt" type="text" placeholder="Type a follow-up prompt…" aria-label="Codex follow-up prompt" />
         <button type="submit">Send</button>
