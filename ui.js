@@ -5,6 +5,9 @@ const terminal = document.querySelector('#terminal-view');
 const output = document.querySelector('#terminal-output');
 const sessionSelect = document.querySelector('#codex-session');
 let selectedSessionId = '';
+let currentSessionId = '';
+let sessionSelectionExplicit = false;
+let followLatest = true;
 
 if (help) help.hidden = isTerminal;
 if (terminal) terminal.hidden = !isTerminal;
@@ -20,19 +23,22 @@ function append(text) {
   line.className = 'terminal-line';
   line.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
   output.appendChild(line);
-  output.scrollTop = output.scrollHeight;
+  if (followLatest) output.scrollTop = output.scrollHeight;
 }
 
 if (isTerminal) {
-  chrome.runtime.sendMessage({ type: 'get-codex-sessions' }, response => {
+  chrome.runtime.sendMessage({ type: 'get-codex-sessions', limit: 50 }, response => {
     for (const session of response?.sessions || []) {
       const option = document.createElement('option');
       option.value = session.id;
-      option.textContent = `${session.summary || 'Untitled'} · ${session.id.slice(0, 12)}`;
+      option.textContent = `${session.name || session.summary || 'Untitled session'}${session.timestamp ? ` · ${new Date(session.timestamp).toLocaleDateString()}` : ''}`;
       sessionSelect?.appendChild(option);
     }
   });
-  sessionSelect?.addEventListener('change', () => { selectedSessionId = sessionSelect.value; });
+  output?.addEventListener('scroll', () => { followLatest = output.scrollHeight - output.scrollTop - output.clientHeight < 32; });
+  document.querySelector('#scroll-terminal-up')?.addEventListener('click', () => { followLatest = false; output?.scrollBy({ top: -Math.max(output.clientHeight * 0.8, 240), behavior: 'smooth' }); });
+  document.querySelector('#scroll-terminal-down')?.addEventListener('click', () => { followLatest = true; output?.scrollTo({ top: output.scrollHeight, behavior: 'smooth' }); });
+  sessionSelect?.addEventListener('change', () => { selectedSessionId = sessionSelect.value; sessionSelectionExplicit = Boolean(selectedSessionId && selectedSessionId !== currentSessionId); });
   chrome.runtime.sendMessage({ type: 'get-ui-state' }, response => {
     for (const event of response?.terminalState || []) append(event.text || event.stdout || event.error);
   });
@@ -40,6 +46,13 @@ if (isTerminal) {
     if (message.type === 'terminal-update') {
       append(message.text || message.stdout || message.error);
       if (message.projectUrl) append(`Navigating to ${message.projectUrl}`);
+      if (message.sessionId) {
+        currentSessionId = message.sessionId;
+        if (!sessionSelectionExplicit && sessionSelect) {
+          selectedSessionId = message.sessionId;
+          sessionSelect.value = message.sessionId;
+        }
+      }
     }
   });
 
@@ -50,7 +63,9 @@ if (isTerminal) {
     if (!prompt) return;
     append(`> ${prompt}`);
     input.value = '';
-    chrome.runtime.sendMessage({ type: 'run-codex-agent', prompt, sessionId: selectedSessionId || undefined }, response => {
+    const sessionId = sessionSelectionExplicit ? selectedSessionId : undefined;
+    sessionSelectionExplicit = false;
+    chrome.runtime.sendMessage({ type: 'run-codex-agent', prompt, sessionId }, response => {
       if (chrome.runtime.lastError || response?.error) append(response?.error || chrome.runtime.lastError.message);
     });
   });

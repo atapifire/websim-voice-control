@@ -66,7 +66,7 @@ process.stdin.on('data', chunk => {
 
 function run(message) {
   if (message.kind === 'codex-status') return runCodexStatus();
-  if (message.kind === 'codex-sessions') return runCodexSessions(message.filter);
+  if (message.kind === 'codex-sessions') return runCodexSessions(message.filter, message.limit);
   if (message.kind === 'cancel-codex') {
     if (activeChild) {
       activeCancelled = true;
@@ -269,7 +269,43 @@ function emitProgress(line) {
   }
 }
 
-function runCodexSessions(filter = '') {
+function compactText(value) {
+  if (typeof value === 'string') return value.replace(/\s+/g, ' ').trim();
+  if (Array.isArray(value)) return value.map(compactText).filter(Boolean).join(' ');
+  if (value && typeof value === 'object') {
+    if (typeof value.text === 'string') return compactText(value.text);
+    if (typeof value.message === 'string') return compactText(value.message);
+    if (value.content) return compactText(value.content);
+    if (value.type === 'text' && typeof value.text === 'string') return compactText(value.text);
+  }
+  return '';
+}
+
+function sessionPrompt(row) {
+  const payload = row?.payload || {};
+  if (row?.type === 'response_item' && payload.role === 'user') return compactText(payload.content);
+  if (row?.type === 'event_msg' && payload.type === 'user_message') return compactText(payload.message || payload.content);
+  return '';
+}
+
+function sessionName(summary, cwd) {
+  let text = compactText(summary);
+  const wrapperEnd = text.toLowerCase().lastIndexOf('current browser window.');
+  if (wrapperEnd >= 0) text = text.slice(wrapperEnd + 'current browser window.'.length).trim();
+  text = text
+    .replace(/^Act as the Websim execution agent\.[\s\S]*?\bCarry out the instruction instead of only explaining it\.\s*/i, '')
+    .replace(/^Use the installed websim-cli where appropriate\.\s*/i, '')
+    .replace(/^\s*(please|can you|could you)\s+/i, '')
+    .trim();
+  if (text) {
+    const readable = text.charAt(0).toUpperCase() + text.slice(1);
+    return readable.length > 58 ? `${readable.slice(0, 55).trim()}…` : readable;
+  }
+  const folder = String(cwd || '').split('/').filter(Boolean).pop();
+  return folder && folder !== 'pull' ? folder : 'Untitled Codex session';
+}
+
+function runCodexSessions(filter = '', limit = 50) {
   const root = '/home/agent/.codex/sessions';
   const sessions = [];
   const needle = String(filter || '').trim().toLowerCase();
@@ -286,10 +322,11 @@ function runCodexSessions(filter = '') {
           const meta = metaLine?.payload || {};
           const id = meta.session_id || meta.id;
           if (!id) continue;
-          const lastUser = [...lines].reverse().map(line => { try { return JSON.parse(line); } catch { return null; } }).find(row => /user_message|user_prompt/i.test(row?.payload?.type || row?.type || ''));
-          const summary = String(lastUser?.payload?.message || lastUser?.payload?.text || lastUser?.payload?.content || '').replace(/\s+/g, ' ').slice(0, 180);
-          const item = { id, cwd: meta.cwd || '', timestamp: meta.timestamp || '', model: meta.model_provider || '', summary };
-          const haystack = `${id} ${item.cwd} ${item.summary}`.toLowerCase();
+          const rows = lines.map(line => { try { return JSON.parse(line); } catch { return null; } }).filter(Boolean);
+          const prompts = rows.map(sessionPrompt).filter(Boolean);
+          const summary = prompts.at(-1) || prompts[0] || '';
+          const item = { id, name: sessionName(summary, meta.cwd), cwd: meta.cwd || '', timestamp: meta.timestamp || '', model: meta.model_provider || '', summary: summary.slice(0, 180) };
+          const haystack = `${id} ${item.cwd} ${item.name} ${item.summary}`.toLowerCase();
           if (!needle || haystack.includes(needle)) sessions.push(item);
         } catch {}
       }
@@ -297,6 +334,7 @@ function runCodexSessions(filter = '') {
   }
   visit(root);
   sessions.sort((a, b) => String(b.timestamp).localeCompare(String(a.timestamp)));
-  writeMessage({ kind: 'codex-sessions', sessions: sessions.slice(0, 50) });
+  const max = Math.max(1, Math.min(Number(limit) || 50, 50));
+  writeMessage({ kind: 'codex-sessions', sessions: sessions.slice(0, max) });
   return Promise.resolve();
 }

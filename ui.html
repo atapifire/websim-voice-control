@@ -20,7 +20,7 @@
       <button id="close-help" type="button">Close Help</button>
     </main>
     <main id="terminal-view" hidden>
-      <header><div class="terminal-actions"><label for="codex-session">Session</label><select id="codex-session"><option value="">Current / new session</option></select><button id="close-terminal" type="button">Close</button></div></header>
+      <header><div class="terminal-actions"><label for="codex-session">Session</label><select id="codex-session"><option value="">Current / new session</option></select><div class="terminal-scroll" role="group" aria-label="Terminal history"><button id="scroll-terminal-up" type="button" title="Scroll up through terminal history" aria-label="Scroll up">↑</button><button id="scroll-terminal-down" type="button" title="Jump to latest terminal output" aria-label="Scroll to latest">↓</button></div><button id="close-terminal" type="button">Close</button></div></header>
       <div id="terminal-output" role="log" aria-live="polite" data-placeholder="true">Waiting for Codex…</div>
       <form id="terminal-input" autocomplete="off">
         <input id="terminal-prompt" type="text" placeholder="Type a follow-up prompt…" aria-label="Codex follow-up prompt" />

@@ -182,15 +182,18 @@
   }
 
   function listCodexSessions(filter = '') {
-    chrome.runtime.sendMessage({ type: 'get-codex-sessions', filter }, response => {
+    chrome.runtime.sendMessage({ type: 'get-codex-sessions', filter, limit: 10 }, response => {
       codexSessions = response?.sessions || [];
       showTerminal();
       terminalLine(codexSessions.length ? `Available Codex sessions${filter ? ` matching “${filter}”` : ''}:` : 'No resumable Codex sessions found.');
       for (const [index, session] of codexSessions.slice(0, 10).entries()) {
-        terminalLine(`${index + 1}. ${session.summary || 'Untitled session'} · ${session.id} · ${session.cwd || 'unknown folder'}`);
+        terminalLine(`${index + 1}. ${session.name || session.summary || 'Untitled session'}${session.cwd ? ` · ${session.cwd.split('/').filter(Boolean).pop()}` : ''}`);
       }
       if (!codexSessions.length) speak('No resumable Codex sessions found.');
-      else speak(`I found ${codexSessions.length} resumable Codex sessions. The newest is session 1.`);
+      else {
+        const spoken = codexSessions.slice(0, 5).map((session, index) => `${index + 1}, ${session.name || 'Untitled session'}`).join('. ');
+        speak(`I found ${codexSessions.length} recent Codex sessions. ${spoken}. Say Resume Codex Session followed by a number to switch.`);
+      }
     });
   }
 
@@ -425,7 +428,7 @@
     if (normalized === 'show terminal' || normalized === 'show codex terminal' || normalized === 'open terminal') { showTerminal(); return; }
     if (normalized === 'hide terminal' || normalized === 'hide codex terminal' || normalized === 'close terminal') { hideTerminal(); return; }
     if (normalized === 'codex stop' || normalized === 'stop codex' || normalized === 'agent stop') { stopCodexAgent(); return; }
-    if (normalized === 'list codex sessions' || normalized === 'show codex sessions' || normalized === 'what codex sessions can i resume' || normalized === 'what sessions can i resume') { listCodexSessions(); return; }
+    if (normalized === 'list codex sessions' || normalized === 'show codex sessions' || normalized === 'list sessions' || normalized === 'show sessions' || normalized === 'tell me about sessions' || normalized === 'tell me about my sessions' || normalized === 'tell me about codex sessions' || normalized === 'which sessions can we resume' || normalized === 'what codex sessions do we have' || normalized === 'what codex sessions can i resume' || normalized === 'what sessions can i resume') { listCodexSessions(); return; }
     const findSessions = normalized.match(/^(?:find|search) codex sessions(?: for)?\s+(.+)$/);
     if (findSessions) { listCodexSessions(findSessions[1]); return; }
     if (normalized === 'resume last codex session' || normalized === 'resume last session') {

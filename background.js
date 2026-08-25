@@ -202,7 +202,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ ok: false, error: 'Chrome native messaging is unavailable.' });
       return true;
     }
-    chrome.runtime.sendNativeMessage(NATIVE_HOST, { kind: 'codex-sessions', filter: message.filter || '' }, response => {
+    chrome.runtime.sendNativeMessage(NATIVE_HOST, { kind: 'codex-sessions', filter: message.filter || '', limit: message.limit || 50 }, response => {
       const error = chrome.runtime.lastError;
       sendResponse(error ? { ok: false, error: error.message } : (response || { ok: false, error: 'No session list returned.' }));
     });
@@ -263,7 +263,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return true;
     }
     chrome.storage.local.get({ codexModel: '', codexReasoning: '', codexSessionId: '' }, result => {
+      const explicitSessionSwitch = Boolean(message.sessionId && message.sessionId !== currentCodexSessionId);
       const sessionId = message.sessionId || currentCodexSessionId || result.codexSessionId || undefined;
+      if (explicitSessionSwitch) {
+        currentCodexSessionId = message.sessionId;
+        chrome.storage.local.set({ codexSessionId: message.sessionId });
+      }
       const payload = { kind: 'codex', prompt: message.prompt, sessionId, model: result.codexModel || undefined, reasoning: result.codexReasoning || undefined };
       log('log', 'Running Codex agent request', { prompt: message.prompt, model: payload.model || 'configured default' });
       if (typeof chrome.runtime.connectNative !== 'function') {
