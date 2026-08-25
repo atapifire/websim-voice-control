@@ -1,0 +1,24 @@
+:root { color-scheme: dark; font-family: system-ui, sans-serif; }
+html, body { margin: 0; min-width: 420px; background: #10131a; color: #f3f5f7; }
+body.terminal-mode { height: 100vh; overflow: hidden; }
+main { padding: 26px; }
+body.terminal-mode main { height: 100vh; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; }
+.eyebrow { color: #86aaff; font-size: 11px; font-weight: 800; letter-spacing: .12em; }
+h1 { margin: 7px 0 8px; font-size: 26px; }
+p { line-height: 1.5; }
+.intro { margin: 0 0 22px; color: #aeb8c8; }
+.command-group { margin: 14px 0; padding: 14px; border: 1px solid #ffffff18; border-radius: 12px; background: #171c27; }
+.command-group h2 { margin: 0 0 10px; font-size: 14px; color: #bcd0ff; }
+.command { display: flex; justify-content: space-between; gap: 18px; padding: 7px 0; border-top: 1px solid #ffffff0d; }
+.command:first-of-type { border-top: 0; }
+.command b { color: #f3f5f7; }
+.command span { color: #aeb8c8; text-align: right; }
+.chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.chips span { padding: 6px 8px; border-radius: 6px; background: #242c3b; color: #e6ebf4; font-size: 12px; }
+.tip { margin: 18px 0; color: #aeb8c8; font-size: 12px; }
+button { border: 0; border-radius: 7px; padding: 9px 13px; background: #3977ff; color: white; font-weight: 700; cursor: pointer; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+header h1 { margin: 0; }
+#terminal-output { flex: 1 1 auto; min-height: 0; height: auto; margin: 18px 0 0; padding: 14px; overflow: auto; border: 1px solid #4d8f61; border-radius: 10px; background: #07130b; color: #d6f7df; white-space: pre-wrap; font: 12px/1.45 ui-monospace, monospace; }
+#terminal-input { display: flex; gap: 8px; margin-top: 12px; }
+#terminal-prompt { flex: 1; min-width: 0; border: 1px solid #4d8f61; border-radius: 7px; padding: 9px 10px; background: #0b1d11; color: #d6f7df; font: 12px ui-monospace, monospace; }

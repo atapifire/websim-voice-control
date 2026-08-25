@@ -1,0 +1,5 @@
+.websim.json
+.websim-manifest.json
+*.log
+node_modules/
+dist/

@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Websim Voice Control",
+  "version": "0.1.0",
+  "description": "Hands-free voice input with command and dictation modes.",
+  "permissions": ["activeTab", "storage", "nativeMessaging", "scripting", "tabs"],
+  "host_permissions": ["https://api.websim.com/*", "https://websim.com/*", "https://*.websim.com/*"],
+  "background": { "service_worker": "background.js" },
+  "action": {
+    "default_title": "Websim Voice Control",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}

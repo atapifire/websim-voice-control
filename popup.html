@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Websim Voice Control</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Websim Voice</h1>
+      <p id="support" class="hint"></p>
+      <button id="toggle" type="button">Start listening</button>
+      <button id="help" type="button" class="secondary">Show command help</button>
+      <section id="popup-help" hidden aria-label="Websim voice command help">
+        <h2>Websim Voice Commands</h2>
+        <p><b>Modes:</b> Command Mode, Dictation Mode</p>
+        <p><b>Editing:</b> Say hello, Write hello, Select All, Delete, Enter, Tab, Backspace, Space</p>
+        <p><b>Projects:</b> Recent Projects, Search Projects for…, Open Project…, New Project</p>
+        <p><b>CLI:</b> CLI Login, Clone Project…, Pull Project, Sync Project, Push Project, Promote Project</p>
+        <p><b>Power command:</b> “Codex …” runs an arbitrary instruction through the local Codex agent. Say “Codex Stop” to cancel it. “Show Terminal” and “Hide Terminal” control the live terminal.</p>
+        <p><b>Help:</b> Help, Close Help</p>
+      </section>
+      <div class="status-row"><span>Status</span><strong id="status">Off</strong></div>
+      <div class="status-row"><span>Mode</span><strong id="mode">Command</strong></div>
+      <p class="hint">Say “Websim Sleep” to pause. Say “Websim Wake” to resume.</p>
+      <details>
+        <summary>Commands</summary>
+        <p><b>Command Mode:</b> “Say hello”, “Write hello”, “Select All”, “Delete”, “Enter”</p>
+        <p><b>Projects:</b> “Recent Projects”, “Search Projects for …”, “Open Project …”, “New Project”, “Help”</p>
+        <p><b>CLI:</b> “CLI Login”, “Clone Project …”, “Pull Project”, “Sync Project”, “Push Project”, “Promote Project”, “Create CLI Project”</p>
+        <p><b>Model:</b> “Switch mode to Luna Low”, “Switch model to Terra with high”, “Set reasoning level to medium”</p>
+        <p><b>Modes:</b> “Dictation Mode”, “Command Mode”</p>
+        <p><b>Dictation:</b> every phrase is typed into the focused field</p>
+      </details>
+      <details>
+        <summary>Diagnostics</summary>
+        <button id="refresh-logs" type="button" class="secondary">Refresh logs</button>
+        <button id="clear-logs" type="button" class="secondary">Clear logs</button>
+        <pre id="logs">No logs loaded.</pre>
+      </details>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

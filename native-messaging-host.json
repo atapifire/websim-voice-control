@@ -1,0 +1,9 @@
+{
+  "name": "com.websim.voicecontrol",
+  "description": "Runs websim-cli for Websim Voice Control",
+  "path": "/home/agent/Documents/ChatGPT/VoiceChromePlugin/native-host.js",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://REPLACE_WITH_EXTENSION_ID/"
+  ]
+}

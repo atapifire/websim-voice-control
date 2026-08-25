@@ -1,0 +1,116 @@
+#websim-voice-indicator {
+  position: fixed;
+  z-index: 2147483647;
+  right: 16px;
+  bottom: 16px;
+  padding: 7px 11px;
+  border-radius: 999px;
+  color: #fff;
+  background: #3977ff;
+  box-shadow: 0 2px 12px #0005;
+  font: 600 12px system-ui, sans-serif;
+  opacity: .9;
+  pointer-events: none;
+}
+#websim-voice-indicator.sleeping { background: #596273; }
+#websim-voice-indicator.error { background: #c53e3e; }
+
+#websim-voice-help[hidden] { display: none !important; }
+#websim-voice-help {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #10131acc;
+  color: #f3f5f7;
+  font: 14px/1.45 system-ui, sans-serif;
+}
+.websim-voice-help-card {
+  position: relative;
+  width: min(520px, 100%);
+  max-height: min(80vh, 680px);
+  overflow: auto;
+  padding: 24px;
+  border: 1px solid #ffffff22;
+  border-radius: 16px;
+  background: #171c27;
+  box-shadow: 0 12px 48px #0008;
+}
+.websim-voice-help-card h2 { margin: 0 32px 16px 0; font-size: 20px; }
+.websim-voice-help-card p { margin: 10px 0; }
+.websim-voice-help-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 28px;
+  cursor: pointer;
+}
+.websim-voice-help-note { color: #aeb8c8; font-size: 12px; }
+.websim-project-results { margin-top: 18px; padding-top: 14px; border-top: 1px solid #ffffff22; }
+.websim-project-results h3 { margin: 0 0 8px; font-size: 15px; }
+.websim-project-results button {
+  display: block;
+  width: 100%;
+  margin: 6px 0;
+  padding: 9px 10px;
+  border: 1px solid #ffffff22;
+  border-radius: 8px;
+  background: #242c3b;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+.websim-project-results button:hover { background: #31405b; }
+
+#websim-codex-terminal[hidden] { display: none !important; }
+#websim-codex-terminal {
+  position: fixed;
+  inset: auto 18px 18px auto;
+  z-index: 2147483647;
+  display: flex;
+  width: min(720px, calc(100vw - 36px));
+  max-height: min(65vh, 560px);
+  color: #d6f7df;
+  font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.websim-codex-terminal-card {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #4d8f61;
+  border-radius: 12px;
+  background: #07130b;
+  box-shadow: 0 12px 48px #000b;
+}
+.websim-codex-terminal-card header {
+  display: flex;
+  justify-content: space-between;
+  padding: 9px 12px;
+  background: #10291a;
+  color: #a5e9b2;
+  font: 600 12px system-ui, sans-serif;
+}
+.websim-terminal-close {
+  border: 0;
+  background: transparent;
+  color: #c9f5d0;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.websim-terminal-output {
+  min-height: 100px;
+  max-height: min(58vh, 500px);
+  margin: 0;
+  padding: 12px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
