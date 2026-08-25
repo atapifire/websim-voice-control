@@ -512,8 +512,7 @@
       }
       if (message.kind === 'codex-done') {
         if (message.stdout) terminalLine(message.stdout.slice(-4000));
-        if (message.ok) speak('Codex finished.');
-        else speak(message.error === 'Cancelled by user' ? 'Codex stopped.' : `Codex stopped with an error. ${message.error || ''}`);
+        if (!message.ok) speak(message.error === 'Cancelled by user' ? 'Codex stopped.' : `Codex stopped with an error. ${message.error || ''}`);
         if (message.projectUrl) terminalLine('Opening the project in a new browser tab.');
       }
       sendResponse({ ok: true });
