@@ -1,6 +1,7 @@
 const NATIVE_HOST = 'com.websim.voicecontrol';
 let codexPort = null;
 let codexTabId = null;
+let currentCodexSessionId = null;
 const uiRefs = {
   help: { windowId: null, tabId: null, opening: false },
   terminal: { windowId: null, tabId: null, opening: false }
@@ -261,8 +262,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ ok: false, error: 'A Codex task is already running.' });
       return true;
     }
-    chrome.storage.local.get({ codexModel: '', codexReasoning: '' }, result => {
-      const payload = { kind: 'codex', prompt: message.prompt, sessionId: message.sessionId || undefined, model: result.codexModel || undefined, reasoning: result.codexReasoning || undefined };
+    chrome.storage.local.get({ codexModel: '', codexReasoning: '', codexSessionId: '' }, result => {
+      const sessionId = message.sessionId || currentCodexSessionId || result.codexSessionId || undefined;
+      const payload = { kind: 'codex', prompt: message.prompt, sessionId, model: result.codexModel || undefined, reasoning: result.codexReasoning || undefined };
       log('log', 'Running Codex agent request', { prompt: message.prompt, model: payload.model || 'configured default' });
       if (typeof chrome.runtime.connectNative !== 'function') {
         const error = 'Chrome native messaging is unavailable. Reload the extension after adding nativeMessaging permission.';
@@ -272,13 +274,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
       try {
         terminalState = [{ kind: 'progress', text: 'Codex request received. Starting the agent…' }];
-        openUi('terminal');
+        if (uiRefs.terminal.windowId === null && !uiRefs.terminal.opening) openUi('terminal');
         codexTabId = sender.tab?.id;
         const port = chrome.runtime.connectNative(NATIVE_HOST);
         codexPort = port;
         let completionHandled = false;
         port.onMessage.addListener(update => {
           if (update.kind === 'codex-done' && completionHandled) return;
+          if (update.sessionId) {
+            currentCodexSessionId = update.sessionId;
+            chrome.storage.local.set({ codexSessionId: update.sessionId });
+          }
           terminalState = [...terminalState, update].slice(-200);
           if (codexTabId) chrome.tabs.sendMessage(codexTabId, { type: 'codex-progress', ...update });
           const terminalTabId = uiRefs.terminal.tabId;

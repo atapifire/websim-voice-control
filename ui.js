@@ -3,6 +3,8 @@ const isTerminal = location.pathname.endsWith('/terminal.html') || query.get('vi
 const help = document.querySelector('#help-view');
 const terminal = document.querySelector('#terminal-view');
 const output = document.querySelector('#terminal-output');
+const sessionSelect = document.querySelector('#codex-session');
+let selectedSessionId = '';
 
 if (help) help.hidden = isTerminal;
 if (terminal) terminal.hidden = !isTerminal;
@@ -22,6 +24,15 @@ function append(text) {
 }
 
 if (isTerminal) {
+  chrome.runtime.sendMessage({ type: 'get-codex-sessions' }, response => {
+    for (const session of response?.sessions || []) {
+      const option = document.createElement('option');
+      option.value = session.id;
+      option.textContent = `${session.summary || 'Untitled'} · ${session.id.slice(0, 12)}`;
+      sessionSelect?.appendChild(option);
+    }
+  });
+  sessionSelect?.addEventListener('change', () => { selectedSessionId = sessionSelect.value; });
   chrome.runtime.sendMessage({ type: 'get-ui-state' }, response => {
     for (const event of response?.terminalState || []) append(event.text || event.stdout || event.error);
   });
@@ -39,7 +50,7 @@ if (isTerminal) {
     if (!prompt) return;
     append(`> ${prompt}`);
     input.value = '';
-    chrome.runtime.sendMessage({ type: 'run-codex-agent', prompt }, response => {
+    chrome.runtime.sendMessage({ type: 'run-codex-agent', prompt, sessionId: selectedSessionId || undefined }, response => {
       if (chrome.runtime.lastError || response?.error) append(response?.error || chrome.runtime.lastError.message);
     });
   });

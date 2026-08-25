@@ -26,6 +26,7 @@
   };
   let projectResults = [];
   let codexSessions = [];
+  let terminalUiRequested = false;
 
   function updateIndicator(text = '') {
     indicator.hidden = !state.listening;
@@ -121,7 +122,10 @@
     helpPanel.hidden = true;
     helpPanel.style.display = 'none';
     helpHost.style.display = 'none';
-    chrome.runtime.sendMessage({ type: 'open-ui', view: 'terminal' });
+    if (!terminalUiRequested) {
+      terminalUiRequested = true;
+      chrome.runtime.sendMessage({ type: 'open-ui', view: 'terminal' });
+    }
     terminalPanel.hidden = false;
     terminalPanel.style.display = 'flex';
     terminalHost.style.display = 'block';
@@ -129,6 +133,7 @@
 
   function hideTerminal() {
     chrome.runtime.sendMessage({ type: 'close-ui', view: 'terminal' });
+    terminalUiRequested = false;
     terminalPanel.hidden = true;
     terminalPanel.style.display = 'none';
     terminalHost.style.display = 'none';

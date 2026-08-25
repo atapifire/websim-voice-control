@@ -97,7 +97,10 @@ The Codex Terminal shows command events and output and includes a follow-up
 prompt field. Its newest output stays anchored at the bottom, with older
 output above it. TTS speaks meaningful status, agent messages, login state,
 errors, and completion messages—not raw event JSON. Sessions are read from
-the local Codex session store and resumed with the installed Codex CLI.
+the local Codex session store and resumed with the installed Codex CLI. The
+Terminal header includes a session dropdown; selecting a session makes the
+next follow-up continue that session. A new `Codex ...` request automatically
+continues the current session when one is available.
 
 ## Optional native bridge setup
 
