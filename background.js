@@ -263,11 +263,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         terminalState = [{ kind: 'progress', text: 'Codex request received. Starting the agent…' }];
         openUi('terminal');
         codexTabId = sender.tab?.id;
-        codexPort = chrome.runtime.connectNative(NATIVE_HOST);
-        codexPort.onMessage.addListener(update => {
+        const port = chrome.runtime.connectNative(NATIVE_HOST);
+        codexPort = port;
+        let completionHandled = false;
+        port.onMessage.addListener(update => {
+          if (update.kind === 'codex-done' && completionHandled) return;
           terminalState = [...terminalState, update].slice(-200);
           if (codexTabId) chrome.tabs.sendMessage(codexTabId, { type: 'codex-progress', ...update });
-          if (uiRefs.terminal.tabId) chrome.tabs.sendMessage(uiRefs.terminal.tabId, { type: 'terminal-update', ...update }, () => void chrome.runtime.lastError);
+          const terminalTabId = uiRefs.terminal.tabId;
+          if (terminalTabId !== null) chrome.tabs.sendMessage(terminalTabId, { type: 'terminal-update', ...update }, () => void chrome.runtime.lastError);
           if (update.kind === 'login-required' && update.url) {
             if (/^https:\/\/websim\.com\/_cli-login\?challengeId=[A-Za-z0-9-]+$/.test(update.url) && !loginUrls.has(update.url)) {
               loginUrls.add(update.url);
@@ -281,21 +285,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             openProjectTab(update.projectUrl);
           }
           if (update.kind === 'codex-done') {
+            completionHandled = true;
             log(update.ok ? 'log' : 'error', 'Codex agent finished', update);
-            codexPort.disconnect();
-            codexPort = null;
+            port.disconnect();
+            if (codexPort === port) codexPort = null;
             codexTabId = null;
           }
         });
-        codexPort.onDisconnect.addListener(() => {
+        port.onDisconnect.addListener(() => {
+          if (completionHandled) return;
           const error = chrome.runtime.lastError?.message;
           if (error && codexTabId) chrome.tabs.sendMessage(codexTabId, { type: 'codex-progress', kind: 'codex-done', ok: false, error });
           if (error) notifyUi({ kind: 'codex-done', ok: false, error });
           if (error) log('error', 'Codex native port disconnected', { error });
-          codexPort = null;
+          if (codexPort === port) codexPort = null;
           codexTabId = null;
         });
-        codexPort.postMessage(payload);
+        port.postMessage(payload);
         notifyUi({ kind: 'progress', text: 'Codex agent started. Terminal output will appear here.' });
         if (codexTabId) chrome.tabs.sendMessage(codexTabId, { type: 'codex-progress', kind: 'progress', text: 'Codex agent started. Terminal output will appear here.' });
         sendResponse({ ok: true, started: true });

@@ -133,6 +133,7 @@ function runCodex(message) {
     let stdout = '';
     let stderr = '';
     let pending = '';
+    let doneSent = false;
     child.stdout.on('data', chunk => {
       stdout += chunk;
       pending += chunk.toString();
@@ -145,11 +146,15 @@ function runCodex(message) {
       for (const line of chunk.toString().split('\n')) if (line.trim()) emitProgressText(`Codex: ${line.trim()}`);
     });
     child.on('error', error => {
+      if (doneSent) return;
+      doneSent = true;
       activeChild = null;
       writeMessage({ kind: 'codex-done', ok: false, error: error.message });
       resolve();
     });
     child.on('close', code => {
+      if (doneSent) return;
+      doneSent = true;
       if (pending.trim()) emitProgress(pending);
       let finalMessage = '';
       try { finalMessage = readFileSync(outputFile, 'utf8'); unlinkSync(outputFile); } catch {}
@@ -170,13 +175,22 @@ function runWebsimCreate() {
     activeChild = child;
     let stdout = '';
     let stderr = '';
+    let doneSent = false;
     child.stdout.on('data', chunk => {
       stdout += chunk;
       emitCliOutput(chunk.toString());
     });
     child.stderr.on('data', chunk => { stderr += chunk; emitProgressText(`websim-cli: ${chunk.toString().trim()}`); });
-    child.on('error', error => { activeChild = null; writeMessage({ kind: 'codex-done', ok: false, error: error.message }); resolve(); });
+    child.on('error', error => {
+      if (doneSent) return;
+      doneSent = true;
+      activeChild = null;
+      writeMessage({ kind: 'codex-done', ok: false, error: error.message });
+      resolve();
+    });
     child.on('close', code => {
+      if (doneSent) return;
+      doneSent = true;
       activeChild = null;
       let result;
       try {
